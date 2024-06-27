@@ -1,4 +1,4 @@
-# DetectorDeGritos
+# Detector De Gritos
 
 Este proyecto implementa un sistema automatizado de reconocimiento de gritos en un laboratorio de rocas y materiales. Utiliza técnicas avanzadas de procesamiento de audio y modelos de aprendizaje automático para detectar y responder rápidamente a emergencias, mejorando la seguridad y eficiencia del entorno de trabajo.
 
@@ -75,3 +75,8 @@ El entrenamiento del modelo se realiza utilizando el notebook Jupyter `GritosMod
 Para evaluar el modelo entrenado, se puede ejecutar el script `ModelEval.py`:
 ```bash
 python ModelEval.py
+```
+## Autores
+
+Manuel Isaác Armijos - Correo: manuel.i.armijos@unl.edu.ec
+Carlos Enrique Armijos - Correo: carlos.e.armijos.l@unl.edu.ec 
