@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Gritos</title>
+
+    <!-- Incluir CSS de Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: url('../images/image.png') no-repeat center center;
+            background-size: cover;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 30px;
+        }
+        .btn {
+            width: 100%;
+        }
+        .section-title {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .section-divider {
+            margin: 40px 0;
+            border-top: 2px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="text-center">
+        <h1 class="display-4">Detector de Gritos</h1>
+        <p class="lead">Utiliza el detector de gritos para evaluar si un sonido es un grito.</p>
+        
+        <!-- Sección de detección en tiempo real -->
+        <h2 class="section-title">Detección en Tiempo Real</h2>
+        <p>Haz clic en el botón para comenzar a grabar y evaluar en tiempo real.</p>
+        <div class="row mb-4">
+            <div class="col">
+                <button id="startRecord" class="btn btn-primary">Comenzar Grabación</button>
+            </div>
+            <div class="col">
+                <button id="evaluate" class="btn btn-success">Evaluar</button>
+            </div>
+        </div>
+
+        <!-- Divisor de secciones -->
+        <div class="section-divider"></div>
+
+        <!-- Sección de evaluación de audios pregrabados -->
+        <h2 class="section-title">Evaluar Audios Pregrabados</h2>
+        <p>Selecciona un archivo de audio y haz clic en el botón para evaluarlo.</p>
+        <input type="file" id="audioInput" accept="audio/*" class="form-control mb-3"/>
+        <button id="uploadAudio" class="btn btn-info mb-3">Prueba aquí tu audio</button>
+        <audio id="audioPlayer" controls class="mb-3" style="width: 100%;"></audio>
+
+        <div id="evaluationResult" class="alert alert-info mt-4" role="alert"></div>
+    </div>
+</div>
+
+<script>
+    const startRecordButton = document.getElementById('startRecord');
+    const evaluateButton = document.getElementById('evaluate');
+    const evaluationResultDiv = document.getElementById('evaluationResult');
+
+    document.getElementById('audioInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const url = URL.createObjectURL(file);
+        document.getElementById('audioPlayer').src = url; // Actualiza el reproductor de audio para usar el archivo cargado
+    });
+
+    document.getElementById('uploadAudio').addEventListener('click', function() {
+        const file = document.getElementById('audioInput').files[0];
+        if (!file) {
+            alert('Por favor, carga un archivo de audio primero.');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload_and_evaluate', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            evaluationResultDiv.textContent = data.result ? 
+                'El audio es un grito, ¿Te gustaría pedir ayuda?' : 
+                'El audio no es un grito, podemos estar tranquilos';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            evaluationResultDiv.textContent = 'Error al procesar el archivo de audio';
+        });
+    });
+
+    startRecordButton.addEventListener('click', () => {
+        startRecordButton.disabled = true;
+        startRecordButton.textContent = 'Grabando...';
+
+        evaluationResultDiv.textContent = '';
+
+        fetch('/start_record', {
+            method: 'POST',
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Grabación iniciada con éxito.');
+                startRecordButton.disabled = false;
+                startRecordButton.textContent = 'Comenzar Grabación';
+            } else {
+                console.error('Error al iniciar la grabación.');
+                startRecordButton.disabled = false;
+                startRecordButton.textContent = 'Comenzar Grabación';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            startRecordButton.disabled = false;
+            startRecordButton.textContent = 'Comenzar Grabación';
+        });
+    });
+
+    evaluateButton.addEventListener('click', () => {
+        fetch('/evaluate_voice', {
+            method: 'POST',
+        })
+        .then(response => response.json())
+        .then(data => {
+            const result = data.result;
+            console.log('Resultado de la Evaluación:', result);
+
+            if (result) {
+                evaluationResultDiv.textContent = 'El audio es un grito, ¿Te gustaría pedir ayuda?';
+            } else {
+                evaluationResultDiv.textContent = 'El audio no es un grito, podemos estar tranquilos';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            evaluationResultDiv.textContent = 'Error al procesar la grabación';
+        });
+    });
+</script>
+
+<!-- Incluir JS de Bootstrap y Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
+</body>
+</html>
